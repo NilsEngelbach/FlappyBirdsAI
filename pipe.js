@@ -1,4 +1,4 @@
-class Pipe {
+export default class Pipe {
     constructor(isTop, height, offsetX) {
         this.width = 50;
         this.height = height;

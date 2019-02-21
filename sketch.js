@@ -1,34 +1,39 @@
-var panSpeed = 4;
-var gravity = 0.75;
-var players = [];
-var playerCount = 10;
+import Player from "./player.js";
+import PipePair from "./pipepair.js";
+import Ground from "./ground.js";
 
-var pipePairA;
-var pipePairB;
+window.panSpeed = 4;
+window.gravity = 0.75;
+window.players = [];
+window.playerCount = 10;
 
-var birdSprite, bgSprite;
+window.pipePairA;
+window.pipePairB;
 
-function preload() {
-    birdSprite = loadImage("sprites/bird.png");
-    bgSprite = loadImage("sprites/bg.png");
-    groundSprite = loadImage("sprites/fg.png");
-    pipeTopSprite = loadImage("sprites/pipeTop.png");
-    pipeBottomSprite = loadImage("sprites/pipeBottom.png");
+window.birdSprite;
+window.bgSprite;
+
+window.preload = () => {
+    window.birdSprite = loadImage("sprites/bird.png");
+    window.bgSprite = loadImage("sprites/bg.png");
+    window.groundSprite = loadImage("sprites/fg.png");
+    window.pipeTopSprite = loadImage("sprites/pipeTop.png");
+    window.pipeBottomSprite = loadImage("sprites/pipeBottom.png");
 }
 
-function setup() {
+window.setup = () => {
     frameRate(30);
     window.canvas = createCanvas(340, 570);
     players = [];
     for (let i = 0; i < playerCount; i++) {
         players.push(new Player(canvas.width / 3, canvas.height / 2));
     }
-    pipePairA = new PipePair();
-    pipePairB = new PipePair(canvas.width / 2 + 35);
-    ground = new Ground();
+    window.pipePairA = new PipePair();
+    window.pipePairB = new PipePair(canvas.width / 2 + 35);
+    window.ground = new Ground();
 }
 
-function draw() {
+window.draw = () => {
 
     image(bgSprite, 0, -100);
     bgSprite.resize(canvas.width, 0);
@@ -52,7 +57,7 @@ function draw() {
     }
 }
 
-function keyPressed() {
+window.keyPressed = () => {
     switch (key) {
         case ' ':
             players[1].flap();

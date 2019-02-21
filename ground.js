@@ -1,4 +1,4 @@
-class Ground {
+export default class Ground {
     constructor() {
         this.width = canvas.width;
         this.height = 110;

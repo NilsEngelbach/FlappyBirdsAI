@@ -1,4 +1,6 @@
-class PipePair {
+import Pipe from './pipe.js';
+
+export default class PipePair {
 
     constructor(offsetX = 0) {
         this.gap = 80;
