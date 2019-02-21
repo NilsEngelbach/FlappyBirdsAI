@@ -6,7 +6,7 @@ class PipePair {
     }
 
     init(offsetX) {
-        this.topHeight = floor(random(20, canvas.height - 100 - this.gap));
+        this.topHeight = floor(random(45, canvas.height - 155 - this.gap)); // 110 ground height
         this.bottomHeight = canvas.height - this.topHeight - this.gap;
 
         this.bottomPipe = new Pipe(false, this.bottomHeight, offsetX);

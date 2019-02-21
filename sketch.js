@@ -1,6 +1,7 @@
-var panSpeed = 5;
+var panSpeed = 4;
 var gravity = 0.75;
-var player;
+var players = [];
+var playerCount = 10;
 
 var pipePairA;
 var pipePairB;
@@ -17,15 +18,18 @@ function preload() {
 
 function setup() {
     frameRate(30);
-    window.canvas = createCanvas(550, 800);
-    player = new Player(canvas.width / 3, canvas.height / 2);
+    window.canvas = createCanvas(340, 570);
+    players = [];
+    for (let i = 0; i < playerCount; i++) {
+        players.push(new Player(canvas.width / 3, canvas.height / 2));
+    }
     pipePairA = new PipePair();
-    pipePairB = new PipePair(canvas.width / 2 + 50);
+    pipePairB = new PipePair(canvas.width / 2 + 35);
     ground = new Ground();
 }
 
 function draw() {
-    // background(135,205,250);
+
     image(bgSprite, 0, -100);
     bgSprite.resize(canvas.width, 0);
 
@@ -36,14 +40,22 @@ function draw() {
 
     ground.show();
 
-    player.update();
-    player.show();
+    for (let i = 0; i < playerCount; i++) {
+        if(!players[i].isDead) {
+            players[i].update();
+            players[i].show();
+        }
+    }
+
+    if (players.every(x => x.isDead)) {
+        setup();
+    }
 }
 
 function keyPressed() {
     switch (key) {
         case ' ':
-            player.flap();
+            players[1].flap();
             break;
     }
 }
