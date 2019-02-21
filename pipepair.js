@@ -29,8 +29,6 @@ export default class PipePair {
         }
         this.bottomPipe.update();
         this.topPipe.update();
-
-        ellipse(this.topPipe.x, this.getCenterY(), 5, 5);
     }
 
     offScreen() {
@@ -38,10 +36,6 @@ export default class PipePair {
             return true;
         }
         return false;
-    }
-
-    getCenterY() {
-        return this.topHeight + this.gap / 2;
     }
 
     collided(p) {

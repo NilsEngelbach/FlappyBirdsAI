@@ -23,13 +23,9 @@ export default class Player {
 
     update() {
         this.velY += gravity;
-        this.velY = constrain(this.velY, -25, 25);
+        this.velY = constrain(this.velY, -10, 10);
         this.y += this.velY;
-        if (ground.collided(this)) {
-            this.isDead = true;
-        }
-
-        if(this.y < 0) {
+        if (pipePairA.collided(this) ||  pipePairB.collided(this) || ground.collided(this)) {
             this.isDead = true;
         }
 
