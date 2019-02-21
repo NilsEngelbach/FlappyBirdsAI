@@ -3,12 +3,13 @@ import Pipe from './pipe.js';
 export default class PipePair {
 
     constructor(offsetX = 0) {
-        this.gap = 80;
+        this.gap = 120;
+        this.topHeight = 0;
         this.init(offsetX);
     }
 
     init(offsetX) {
-        this.topHeight = floor(random(45, canvas.height - 155 - this.gap)); // 110 ground height
+        this.topHeight = floor(random(55, canvas.height - 165 - this.gap)); // 110 ground height
         this.bottomHeight = canvas.height - this.topHeight - this.gap;
 
         this.bottomPipe = new Pipe(false, this.bottomHeight, offsetX);
@@ -28,6 +29,8 @@ export default class PipePair {
         }
         this.bottomPipe.update();
         this.topPipe.update();
+
+        ellipse(this.topPipe.x, this.getCenterY(), 5, 5);
     }
 
     offScreen() {
@@ -35,6 +38,10 @@ export default class PipePair {
             return true;
         }
         return false;
+    }
+
+    getCenterY() {
+        return this.topHeight + this.gap / 2;
     }
 
     collided(p) {

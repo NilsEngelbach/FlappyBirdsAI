@@ -8,6 +8,7 @@ export default class Player {
        this.size = 20;
        this.score = 0;
        this.isDead = false;
+       this.flapcount = 0;
     }
 
     show() {
@@ -24,13 +25,19 @@ export default class Player {
         this.velY += gravity;
         this.velY = constrain(this.velY, -25, 25);
         this.y += this.velY;
-        if (pipePairA.collided(this) ||  pipePairB.collided(this) || ground.collided(this)) {
+        if (ground.collided(this)) {
             this.isDead = true;
         }
+
+        if(this.y < 0) {
+            this.isDead = true;
+        }
+
         this.score++;
     }
 
     flap() {
-        this.velY -= 12;
+        this.velY -= 6;
+        this.flapcount++;
     }
 }
