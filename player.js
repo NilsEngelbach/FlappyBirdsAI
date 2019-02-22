@@ -11,11 +11,11 @@ export default class Player {
        this.flapcount = 0;
     }
 
-    show() {
+    show(sprite) {
         push();
         translate(this.x - this.size / 2 - 8, this.y - this.size / 2);
         rotate((this.velY - 10) * PI / 180);
-        image(birdSprite,0,0);
+        image(sprite ? sprite : defaultBirdSprite ,0,0);
         pop();
         textSize(20);
         //text('Score ' + this.score, 10, canvas.height - 18);

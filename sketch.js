@@ -1,25 +1,29 @@
-import Player from "./player.js";
-import PipePair from "./pipepair.js";
-import Ground from "./ground.js";
-import NEAT from "./neat/neat.js";
+import Ground from './ground.js';
+import NEAT from './neat/neat.js';
+import PipePair from './pipepair.js';
+import Player from './player.js';
+
 
 window.panSpeed = 4;
 window.gravity = 0.75;
+
 window.players = [];
-window.playerCount = 100;
+window.playerCount = 200;
 
 window.pipePairA;
 window.pipePairB;
 
-window.birdSprite;
-window.bgSprite;
-
 window.preload = () => {
-    window.birdSprite = loadImage("sprites/bird.png");
+    window.defaultBirdSprite = loadImage("sprites/bird.png");
     window.bgSprite = loadImage("sprites/bg.png");
     window.groundSprite = loadImage("sprites/fg.png");
     window.pipeTopSprite = loadImage("sprites/pipeTop.png");
     window.pipeBottomSprite = loadImage("sprites/pipeBottom.png");
+    window.speciesSprite = [];
+    for(let i = 0; i <= 15; i++) {
+        let image = loadImage(`sprites/colored-birds/bird-${i}.png`);
+        window.speciesSprite.push(image);
+    }
 }
 
 
@@ -54,7 +58,7 @@ window.draw = () => {
 
     ground.show();
 
-    text('Generation ' + neat.generation, 10, canvas.height - 20);
+    text(`Generation ${neat.generation} (${Object.keys(neat.speciesDict).length})`, 10, canvas.height - 20);
     text('Score ' + count, 10, canvas.height - 50);
     text('Highscore ' + highscore, 180, canvas.height - 50);
     text('Alive ' + birdsAlive, 180, canvas.height - 20);
@@ -72,7 +76,6 @@ window.draw = () => {
         // Debug lines, set population to 1 and disable repopulate to properly debug
         // line(players[i].x, players[i].y, players[i].x, players[i].y + heightAboveBottomPipe);
         // line(players[i].x, players[i].y, players[i].x + distanceToPipes, players[i].y);
-        
 
         neat.population[i].see(inputs);
 
@@ -82,7 +85,7 @@ window.draw = () => {
 
         if(!players[i].isDead) {
             players[i].update();
-            players[i].show();
+            players[i].show(window.speciesSprite[neat.population[i].species]);
             neat.population[i].setFitness(players[i].score);
         }
     }
@@ -101,7 +104,7 @@ window.draw = () => {
     }
 }
 
-window.getNextPipepair = (xpos) => {
+function getNextPipepair(xpos) {
     if ((pipePairA.bottomPipe.x + pipePairA.bottomPipe.width - xpos) > 0 && (pipePairA.bottomPipe.x + pipePairA.bottomPipe.width - xpos) < (pipePairB.bottomPipe.x + pipePairB.bottomPipe.width - xpos) || (pipePairB.bottomPipe.x + pipePairB.bottomPipe.width - xpos) < 0) {
         return pipePairA;
     }else{
@@ -109,10 +112,10 @@ window.getNextPipepair = (xpos) => {
     }
 }
 
-window.keyPressed = () => {
-    switch (key) {
-        case ' ':
-            players[1].flap();
-            break;
-    }
-}
+// window.keyPressed = () => {
+//     switch (key) {
+//         case ' ':
+//             players[1].flap();
+//             break;
+//     }
+// }
