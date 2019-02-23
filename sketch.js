@@ -193,7 +193,7 @@ var network = n => {
                 if (bestPlayer.brain.nodes[connection.end].type == 'output') {
                     n.line(140, inputOffset * (connection.start - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes), 350, 40 + inputOffset * (connection.end - bestPlayer.brain.numInputNodes));
                 } else {
-                    n.line(140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes), 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
+                    n.line(140, inputOffset * (connection.start - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes), 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
                 }
             }
         });
