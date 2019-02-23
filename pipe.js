@@ -22,8 +22,6 @@ export default class Pipe {
             p.pipeBottomSprite.resize(this.width, 0);
             p.image(p.pipeBottomSprite, this.x, this.topY);
         }
-        // fill(0, 204, 0);
-        // rect(this.x, this.topY, this.width, this.height);
     }
 
     update() {
@@ -35,7 +33,7 @@ export default class Pipe {
             if(!this.isTop && p.y + p.size / 2 >= this.topY){
                 return true;
             }
-            if(this.isTop && p.y + p.size / 2 <= this.bottomY){
+            if(this.isTop && p.y - p.size / 2 <= this.bottomY){
                 return true;
             }
         }

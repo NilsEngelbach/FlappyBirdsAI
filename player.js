@@ -5,7 +5,7 @@ export default class Player {
        this.y = y;
        this.velY = -4;
        this.velX = panSpeed;
-       this.size = 20;
+       this.size = 25;
        this.score = 0;
        this.isDead = false;
        this.flapcount = 0;
@@ -13,9 +13,12 @@ export default class Player {
 
     show(p, sprite) {
         p.push();
-        p.translate(this.x - this.size / 2 - 8, this.y - this.size / 2);
+        p.translate(this.x, this.y);
         p.rotate((this.velY - 10) * p.PI / 180);
-        p.image(sprite ? sprite : p.defaultBirdSprite ,0,0);
+        p.image(sprite ? sprite : p.defaultBirdSprite , -this.size * 0.75, -this.size / 2);
+        // for debugging
+        // p.fill(255, 0, 0, 50);
+        // p.ellipse(0, 0, this.size, this.size);     
         p.pop();
     }
 

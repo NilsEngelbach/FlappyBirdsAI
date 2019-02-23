@@ -3,7 +3,7 @@ import Pipe from './pipe.js';
 export default class PipePair {
 
     constructor(p, offsetX = 0) {
-        this.gap = 120;
+        this.gap = 100;
         this.topHeight = 0;
         this.init(p, offsetX);
     }
