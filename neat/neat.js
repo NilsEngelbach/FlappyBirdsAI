@@ -3,7 +3,7 @@ import Species from "./species.js";
 import CONFIG from "./config.js";
 
 export default class NEAT {
-    
+
     constructor(populationSize = 100, numInputs, numOutputs) {
         this.population = [];
         this.populationSize = populationSize;
@@ -23,6 +23,10 @@ export default class NEAT {
         }
 
         this.speciesDict[0] = new Species(0, this.population[0].clone());
+    }
+
+    getOverallChampion() {
+        return this.population.reduce((prev, current) => (prev.fitness > current.fitness) ? prev : current)
     }
 
     repopulate() {
@@ -60,11 +64,11 @@ export default class NEAT {
                 this.speciesDict[newSpeciesId].assignToSpecies(this.population[i]);
             }
         }
-        
+
         // delete species with not enough organisms
         for (let key in this.speciesDict) {
             let species = this.speciesDict[key];
-            
+
             if(species.organisms.length < CONFIG.MIN_SPECIES_SIZE) {
                 this.population = this.population.filter(p => p.species != species.id);
                 delete this.speciesDict[key];
@@ -103,7 +107,7 @@ export default class NEAT {
             species.numOffsprings = Math.floor(species.fitnessSum/totalFitnessSum * this.populationSize);
             count += species.numOffsprings;
         }
-        
+
         // assign the rest randomly
         for(let i = 0; i < this.populationSize - count; i++) {
             const keys = Object.keys(this.speciesDict);

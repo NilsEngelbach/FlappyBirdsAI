@@ -14,13 +14,13 @@ export default class Pipe {
         }
     }
 
-    show() {
+    show(p) {
         if(this.isTop) {
-            pipeTopSprite.resize(this.width, 0);
-            image(pipeTopSprite, this.x, this.height - pipeTopSprite.height);
+            p.pipeTopSprite.resize(this.width, 0);
+            p.image(p.pipeTopSprite, this.x, this.height - p.pipeTopSprite.height);
         } else {
-            pipeBottomSprite.resize(this.width, 0);
-            image(pipeBottomSprite, this.x, this.topY);
+            p.pipeBottomSprite.resize(this.width, 0);
+            p.image(p.pipeBottomSprite, this.x, this.topY);
         }
         // fill(0, 204, 0);
         // rect(this.x, this.topY, this.width, this.height);

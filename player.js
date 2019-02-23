@@ -11,19 +11,17 @@ export default class Player {
        this.flapcount = 0;
     }
 
-    show(sprite) {
-        push();
-        translate(this.x - this.size / 2 - 8, this.y - this.size / 2);
-        rotate((this.velY - 10) * PI / 180);
-        image(sprite ? sprite : defaultBirdSprite ,0,0);
-        pop();
-        textSize(20);
-        //text('Score ' + this.score, 10, canvas.height - 18);
+    show(p, sprite) {
+        p.push();
+        p.translate(this.x - this.size / 2 - 8, this.y - this.size / 2);
+        p.rotate((this.velY - 10) * p.PI / 180);
+        p.image(sprite ? sprite : p.defaultBirdSprite ,0,0);
+        p.pop();
     }
 
-    update() {
+    update(p) {
         this.velY += gravity;
-        this.velY = constrain(this.velY, -10, 10);
+        this.velY = p.constrain(this.velY, -10, 10);
         this.y += this.velY;
         if (pipePairA.collided(this) ||  pipePairB.collided(this) || ground.collided(this)) {
             this.isDead = true;
