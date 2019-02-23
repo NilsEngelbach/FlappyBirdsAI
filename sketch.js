@@ -138,7 +138,8 @@ var network = n => {
     n.draw = () => {
 
         n.background(240,240,240);
-
+        n.strokeWeight(1);
+        n.stroke(127, 63, 120);
         let inputOffset = 50;
         n.textSize(20);
 
@@ -146,7 +147,6 @@ var network = n => {
 
         // Draw Bias Node
         n.fill(204, 101, 192, 127);
-        n.stroke(127, 63, 120);
         n.ellipse(65, 20, 20, 20);
         n.text("Bias", 0, 25);
 
@@ -175,25 +175,51 @@ var network = n => {
         });
 
         bestPlayer.brain.connections.map((connection, i) => {
-            if(bestPlayer.brain.nodes[connection.start].type == 'bias') {
-                if (bestPlayer.brain.nodes[connection.end].type == 'output') {
-                    n.line(65, 20, 350, 40 + inputOffset * (connection.end - bestPlayer.brain.numInputNodes));
+
+            n.strokeWeight(1);
+            n.stroke(127, 63, 120);
+
+            if(!connection.enabled) {
+                n.stroke(255, 255, 255);
+            } else {
+                n.strokeWeight(n.abs(connection.weight) * 4);
+                if(connection.weight < 0) {
+                    n.stroke(0,0,255);
                 } else {
-                    n.line(65, 20, 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
+                    n.stroke(255,0,0);
                 }
             }
+
+
+            if (bestPlayer.brain.nodes[connection.start].type == 'bias') {
+                if (bestPlayer.brain.nodes[connection.end].type == 'output') {
+                    n.line(65, 20, 350, 40 + inputOffset * (connection.end - bestPlayer.brain.numInputNodes));
+                } else if (bestPlayer.brain.nodes[connection.end].type == 'hidden') {
+                    n.line(65, 20, 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
+                } else {
+                    // console.log("bias to input connection");
+                    // console.log(connection);
+                }
+            }
+
             if (bestPlayer.brain.nodes[connection.start].type == 'input') {
                 if (bestPlayer.brain.nodes[connection.end].type == 'output') {
                     n.line(65, 20 + inputOffset * connection.start, 350, 40 + inputOffset * (connection.end - bestPlayer.brain.numInputNodes));
-                } else {
+                } else if (bestPlayer.brain.nodes[connection.end].type == 'hidden') {
                     n.line(65, 20 + inputOffset * connection.start, 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
+                } else {
+                    // console.log("input to input or bias connection:");
+                    // console.log(connection);
                 }
             }
             if (bestPlayer.brain.nodes[connection.start].type == 'hidden') {
                 if (bestPlayer.brain.nodes[connection.end].type == 'output') {
                     n.line(140, inputOffset * (connection.start - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes), 350, 40 + inputOffset * (connection.end - bestPlayer.brain.numInputNodes));
-                } else {
+                } else if (bestPlayer.brain.nodes[connection.end].type == 'hidden') {
                     n.line(140, inputOffset * (connection.start - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes), 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
+                } else {
+                    // console.log("hidden to input or bias connection:");
+                    // console.log(connection);
                 }
             }
         });
