@@ -69,17 +69,20 @@ var game =  p => {
 
         for (let i = 0; i < playerCount; i++) {
             let nextPipepair = getNextPipepair(players[i].x);
-            let heightAboveBottomPipe = nextPipepair.bottomPipe.topY - players[i].y;
+            // let heightAboveBottomPipe = nextPipepair.bottomPipe.topY - players[i].y;
+            let distanceToCenter = nextPipepair.getCenterY() - players[i].y;
             let distanceToPipes = nextPipepair.bottomPipe.x - players[i].x + nextPipepair.bottomPipe.width;
 
             let inputs = [];
             inputs[0] = players[i].y / canvas.height;
-            inputs[1] = heightAboveBottomPipe / canvas.height;
+            inputs[1] = distanceToCenter / canvas.height;
             inputs[2] = distanceToPipes / canvas.width;
 
             // Debug lines, set population to 1 and disable repopulate to properly debug
-            // line(players[i].x, players[i].y, players[i].x, players[i].y + heightAboveBottomPipe);
-            // line(players[i].x, players[i].y, players[i].x + distanceToPipes, players[i].y);
+            // if(!players[i].isDead) {
+            //     p.line(players[i].x, players[i].y, players[i].x, players[i].y + distanceToCenter);
+            //     p.line(players[i].x, players[i].y, players[i].x + distanceToPipes, players[i].y);
+            // }
 
             neat.population[i].see(inputs);
 

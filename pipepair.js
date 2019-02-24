@@ -3,7 +3,7 @@ import Pipe from './pipe.js';
 export default class PipePair {
 
     constructor(p, offsetX = 0) {
-        this.gap = 100;
+        this.gap = 120;
         this.topHeight = 0;
         this.init(p, offsetX);
     }
@@ -36,6 +36,10 @@ export default class PipePair {
             return true;
         }
         return false;
+    }
+
+    getCenterY() {
+        return this.topHeight + this.gap / 2;
     }
 
     collided(p) {
