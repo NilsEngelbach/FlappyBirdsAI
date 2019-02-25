@@ -2,10 +2,11 @@ import Genome from "./genome.js";
 
 export default class Player {
     
-    constructor(generation, numInputs, numOutputs, brain = {}, species = 0, isDead = false, fitness = 0.0) {
+    constructor(generation, numInputs, numOutputs, activation, brain = {}, species = 0, isDead = false, fitness = 0.0) {
         this.generation = generation;
         this.numInputs = numInputs;
         this.numOutputs = numOutputs;
+        this.activation = activation;
         this.isDead = isDead;
         this.fitness = fitness;
         this.species = species;
@@ -13,7 +14,7 @@ export default class Player {
     }
 
     initialize() {
-        this.brain = new Genome(this.numInputs, this.numOutputs);
+        this.brain = new Genome(this.numInputs, this.numOutputs, this.activation);
         this.brain.initialize();
     }
 
@@ -37,7 +38,7 @@ export default class Player {
     }
 
     clone() {
-        let clone = new Player(this.generation, this.numInputs, this.numOutputs, this.brain.clone(), this.species, this.isDead, this.fitness);
+        let clone = new Player(this.generation, this.numInputs, this.numOutputs, this.activation, this.brain.clone(), this.species, this.isDead, this.fitness);
         return clone;
     }
 

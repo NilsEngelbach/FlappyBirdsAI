@@ -2,16 +2,18 @@ import Types from "./types.js";
 import Node from "./node.js";
 import Connection from "./connection.js";
 import CONFIG from "./config.js";
+import Innovation from "./innovation.js";
 
 export default class Genome {
 
-    constructor(numInputNodes, numOutputNodes) {
+    constructor(numInputNodes, numOutputNodes, activation) {
         //BIAS|INPUT1|INPUT2|OUTPUT|HIDDEN
         //0   |     1|     2|     3|     4      POSITION & ID
         this.nodes = [];
         this.connections = [];
         this.numInputNodes = numInputNodes;
         this.numOutputNodes = numOutputNodes;
+        this.activation = activation;
     }
 
     // connect input and bias nodes to output nodes with random weights
@@ -21,12 +23,12 @@ export default class Genome {
 
         // insert INPUT nodes
         for (let i = 0; i < this.numInputNodes; i++) {
-            this.nodes.push(new Node(this.nodes.length, Types.INPUT));
+            this.nodes.push(new Node(1 + i, Types.INPUT));
         }
         
         // insert OUTPUT nodes
         for (let i = 0; i < this.numOutputNodes; i++) {
-            this.nodes.push(new Node(this.nodes.length, Types.OUTPUT));
+            this.nodes.push(new Node(1 + this.numInputNodes + i, Types.OUTPUT));
         }
 
         let inputNodes = this.getInputNodes();
@@ -34,13 +36,13 @@ export default class Genome {
         
         for(let i = 0; i < outputNodes.length; i++) {
             let weight = this.randomDoubleFromInterval(-CONFIG.NEW_WEIGHT_RANGE, CONFIG.NEW_WEIGHT_RANGE);
-            this.connections.push(new Connection(0, i + this.numInputNodes + 1, weight, true, this.connections.length));
+            this.connections.push(new Connection(0, i + this.numInputNodes + 1, weight, true, Innovation.getNextInnovationNumber(0, 1 + this.numInputNodes + i)));
         }
 
         for(let i = 0; i < inputNodes.length; i++) {
             for(let j = 0; j < outputNodes.length; j++) {
                 let weight = this.randomDoubleFromInterval(-CONFIG.NEW_WEIGHT_RANGE, CONFIG.NEW_WEIGHT_RANGE);
-                this.connections.push(new Connection(i + 1, j + this.numInputNodes + 1, weight, true, this.connections.length));
+                this.connections.push(new Connection(i + 1, j + this.numInputNodes + 1, weight, true, Innovation.getNextInnovationNumber(1 + i, 1 + this.numInputNodes + j)));
             }
         }
     }
@@ -68,10 +70,10 @@ export default class Genome {
     addNode() {
         let connection = this.connections[Math.floor(Math.random() * this.connections.length)];
         connection.enabled = false;
-        let newNode = new Node(this.nodes.length, Types.HIDDEN);
+        let newNode = new Node(Innovation.getNextNodeId(connection), Types.HIDDEN);
         this.nodes.push(newNode);
-        this.connections.push(new Connection(connection.start, newNode.id, 1.0, true, this.connections.length));
-        this.connections.push(new Connection(newNode.id, connection.end, connection.weight, true, this.connections.length));
+        this.connections.push(new Connection(connection.start, newNode.id, 1.0, true, Innovation.getNextInnovationNumber(connection.start, newNode.id)));
+        this.connections.push(new Connection(newNode.id, connection.end, connection.weight, true, Innovation.getNextInnovationNumber(newNode.id, connection.end)));
     }
 
     // Mutation: add new connection between two unconnected nodes
@@ -81,51 +83,67 @@ export default class Genome {
     //  - input node and bias
     //  - same node
     addConnection() {
-        // if we have no hidden nodes, dont add new connections
-        if(!this.nodes.some(n => n.type == Types.HIDDEN)){
-            return;
-        }
-
-        let node1 = this.nodes[Math.floor(Math.random() * this.nodes.length)];
-        let node2 = this.nodes[Math.floor(Math.random() * this.nodes.length)];
+        // if(this.isFullyConnected()){
+        //     return;
+        // }
 
         let count = 0;
+        let connectionOk = false;
 
-        while(this.alreadyConnected(node1, node2) || this.bothInputNodes(node1, node2) || this.inputAndBiasNode(node1, node2) || this.sameNode(node1, node2)) {
-            node1 = this.nodes[Math.floor(Math.random() * this.nodes.length)];
-            node2 = this.nodes[Math.floor(Math.random() * this.nodes.length)];
+        while(!connectionOk) {
+            var node1 = this.nodes[Math.floor(Math.random() * this.nodes.length)];
+            var node2 = this.nodes[Math.floor(Math.random() * (this.getHiddenNodes().length + this.numOutputNodes)) + this.numInputNodes + 1];
 
-            // only temporary, have to check whether adding a new connection is even possible
+            connectionOk = !this.alreadyConnected(node1, node2);
+
+            if (!CONFIG.ALLOW_LOOPS) {
+                connectionOk = connectionOk && !this.sameNode(node1, node2);
+    
+                if(connectionOk) {
+                    // check for loops
+                    let testConnection = new Connection(node1.id, node2.id, 1.0, true, -1);
+                    if(this.sortNodes(testConnection)) {
+                        connectionOk = true;
+                    }else{
+                        connectionOk = false;
+                    }
+                }
+            }
+
             count++;
-            if(count > 30) {
+            if(count > 50) {
                 return;
+                console.log("fsf");
             }
         }
 
         let weight = this.randomDoubleFromInterval(-CONFIG.NEW_WEIGHT_RANGE, CONFIG.NEW_WEIGHT_RANGE);
-        this.connections.push(new Connection(node1.id, node2.id, weight, true, this.connections.length));
+        this.connections.push(new Connection(node1.id, node2.id, weight, true, Innovation.getNextInnovationNumber(node1.id, node2.id)));
     }
 
-    sameNode(node1, node2) {
-        return (node1.id == node2.id);
-    }
+    // Returns true if network is fully satisfied, i.e. no new connection possible
+    // input nodes can be connected to hidden and output nodes, no loops 
+    // bias nodes can be conneced to hidden and output nodes, no loops
+    // hidden nodes can be only connected to hidden and output nodes
+    // output nodes can be connected to hidden and output nodes
+    isFullyConnected() {
+        const numHiddenNodes = this.getHiddenNodes().length;
+        let sum = 0;
 
-    bothInputNodes(node1, node2) {
-        if(node1.type == Types.INPUT && node2.type == Types.INPUT) {
-            return true;
+        if(!CONFIG.ALLOW_LOOPS) {
+            const numConnectionsFromInput = this.numInputNodes * (numHiddenNodes + this.numOutputNodes);
+            const numConnectionsFromHidden = numHiddenNodes * (numHiddenNodes - 1 + this.numOutputNodes);
+            const numConnectionsFromBias = numHiddenNodes + this.numOutputNodes;
+            sum = numConnectionsFromInput + numConnectionsFromHidden + numConnectionsFromBias;
         }else{
-            return false;
+            const numConnectionsFromInput = this.numInputNodes * (numHiddenNodes + this.numOutputNodes);
+            const numConnectionsFromHidden = numHiddenNodes * (numHiddenNodes + this.numOutputNodes);
+            const numConnectionsFromBias = numHiddenNodes + this.numOutputNodes;
+            const numConnectionsFromOutput = this.numOutputNodes * (numHiddenNodes + this.numOutputNodes);
+            sum = numConnectionsFromInput + numConnectionsFromHidden + numConnectionsFromBias + numConnectionsFromOutput;
         }
-    }
 
-    inputAndBiasNode(node1, node2) {
-        if(node1.type == Types.INPUT && node2.type == Types.BIAS) {
-            return true;
-        }else if(node1.type == Types.BIAS && node2.type == Types.INPUT) {
-            return true;
-        }else{
-            return false;
-        }
+        return sum == this.connections.length;
     }
 
     alreadyConnected(node1, node2) {
@@ -133,12 +151,22 @@ export default class Genome {
             if(this.connections[i].start == node1.id && this.connections[i].end == node2.id) {
                 return true;
             }
-
-            if(this.connections[i].end == node1.id && this.connections[i].start == node2.id) {
-                return true;
-            }
         }
         return false;
+    }
+
+    sameNode(node1, node2) {
+        if (CONFIG.ALLOW_LOOPS) {
+            return false;
+        }else{
+            return node1.id == node2.id;
+        }
+    }
+
+    resetNetwork() {
+        for (let i = 1; i <= this.nodes; i++) {
+            this.nodes[i].outputValue = 0;
+        }
     }
 
     setInputs(inputValues) {
@@ -148,19 +176,26 @@ export default class Genome {
     }
     
     activateNetwork() {
-        // activate hidden nodes, then output nodes
-        let hiddenNodes = this.getHiddenNodes();
-        for (let i = 0; i < hiddenNodes.length; i++) {
-            this.activateNode(hiddenNodes[i]);
-        }
-        
-        let outputNodes = this.getOutputNodes();
-        for (let i = 0; i < outputNodes.length; i++) {
-            this.activateNode(outputNodes[i]);
+        if (!CONFIG.ALLOW_LOOPS) {
+            let sortedNodes = this.sortNodes();
+            for (let i = 1 + this.numInputNodes; i < sortedNodes.length; i++) {
+                this.activateNode(sortedNodes[i]);
+            }
+        }else{
+            // activate hidden nodes, then output nodes
+            let hiddenNodes = this.getHiddenNodes();
+            for (let i = 0; i < hiddenNodes.length; i++) {
+                this.activateNode(hiddenNodes[i]);
+            }
+            
+            let outputNodes = this.getOutputNodes();
+            for (let i = 0; i < outputNodes.length; i++) {
+                this.activateNode(outputNodes[i]);
+            }
         }
 
         // return output values
-        return outputNodes.map(n => n.outputValue);
+        return this.getOutputNodes().map(n => n.outputValue);
     }
 
     activateNode(node) {
@@ -176,21 +211,38 @@ export default class Genome {
             localSum += startNode.outputValue * inputConnections[j].weight;
         }
 
-        node.outputValue = this.sigmoid(localSum);
-        // node.outputValue = this.binaryStep(localSum, 0.5);
-        // node.outputValue = this.tanh(localSum);
+        node.outputValue = this.activation(localSum);
     }
 
-    sigmoid(x) {
-        return 1.0 / (1.0 + Math.pow(Math.E, -4.9 * x));
-    }
+    sortNodes(testConnection = null) {
+        let sortedNodes = [];
+        let startNodes = [this.getBiasNode()].concat(this.getInputNodes());
+        let otherNodes = this.getHiddenNodes().concat(this.getOutputNodes());
 
-    tanh(x) {
-        return Math.tanh(x);
-    }
+        let connections = JSON.parse(JSON.stringify(this.connections.filter(c => c.enabled)));
 
-    binaryStep(x, step) {
-        return x < step ? 0.0 : 1.0;
+        if (testConnection) {
+            connections.push(testConnection);
+        }
+
+        while(startNodes.length > 0) {
+            let node = startNodes.splice(0, 1)[0];
+            sortedNodes.push(node);
+
+            connections = connections.filter(c => c.start != node.id);
+            for (let i = 0; i < otherNodes.length; i++) {
+                if (!connections.some(c => c.end == otherNodes[i].id)) {
+                    startNodes.push(otherNodes.splice(i, 1)[0]);
+                }
+            }
+        }
+
+        if(connections.length > 0) {
+            return false;
+        }else{
+            return sortedNodes;
+        }
+
     }
 
     randomDoubleFromInterval(min, max) {
@@ -198,7 +250,7 @@ export default class Genome {
     }
 
     clone() {
-        let clone = new Genome(this.numInputNodes, this.numOutputNodes);
+        let clone = new Genome(this.numInputNodes, this.numOutputNodes, this.activation);
 
         for(let i = 0; i < this.nodes.length; i++) {
             clone.nodes.push(this.nodes[i].clone());

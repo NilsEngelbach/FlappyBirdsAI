@@ -34,7 +34,7 @@ export default class Player {
     }
 
     flap() {
-        this.velY -= 6;
+        this.velY = -10;
         this.flapcount++;
     }
 }

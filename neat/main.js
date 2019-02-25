@@ -1,4 +1,6 @@
 import NEAT from "./neat.js";
+import Connection from "./connection.js";
+import * as Activations from "./activations";
 
 // XOR
 // BIAS|INPUT1|INPUT2|OUTPUT|HIDDEN
@@ -7,12 +9,13 @@ import NEAT from "./neat.js";
 let maxFitness = 0.0;
 let bestplayer;
 
-let neat = new NEAT(300, 2, 1);
+let neat = new NEAT(300, 2, 1, Activations.binaryStep);
 
 const XOR = [{input: [0, 0], output: 0}, {input: [0, 1], output: 1}, {input: [1, 0], output: 1}, {input: [1, 1], output: 0}]
-let challenges = XOR.concat(XOR, XOR, XOR, XOR, XOR, XOR, XOR);
+let challenges = XOR.concat(XOR, XOR);
 
 do {
+    console.log("-----------------GEN " + neat.generation + "-----------------")
     let players = neat.population;
     maxFitness = 0.0;
 
@@ -34,10 +37,11 @@ do {
             bestplayer = players[j];
         }
     }
+    
     neat.repopulate();
 }while(maxFitness < challenges.length);
 
-console.log("-----------------GEN " + neat.generation + "-----------------")
+
 console.log("Best player: " + bestplayer.brain.nodes.length + " nodes - " + (bestplayer.brain.nodes.length - 3) + " hidden nodes - " + bestplayer.brain.connections.length + " connections")
 bestplayer.see([0.0, 0.0]);
 console.log("INPUT (0,0): " + bestplayer.think()[0]);
@@ -47,3 +51,4 @@ bestplayer.see([1.0, 0.0]);
 console.log("INPUT (1,0): " + bestplayer.think()[0]);
 bestplayer.see([1.0, 1.0]);
 console.log("INPUT (1,1): " + bestplayer.think()[0]);
+console.log("");

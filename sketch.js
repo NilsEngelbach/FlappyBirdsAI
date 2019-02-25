@@ -2,6 +2,7 @@ import Ground from './ground.js';
 import NEAT from './neat/neat.js';
 import PipePair from './pipepair.js';
 import Player from './player.js';
+import * as Activation from './neat/activations.js';
 
 
 window.panSpeed = 4;
@@ -14,7 +15,7 @@ window.bestPlayer = {};
 window.pipePairA;
 window.pipePairB;
 
-window.neat = new NEAT(playerCount, 3, 1);
+window.neat = new NEAT(playerCount, 3, 1, Activation.sigmoid);
 
 var game =  p => {
 
@@ -69,14 +70,15 @@ var game =  p => {
 
         for (let i = 0; i < playerCount; i++) {
             let nextPipepair = getNextPipepair(players[i].x);
-            // let heightAboveBottomPipe = nextPipepair.bottomPipe.topY - players[i].y;
+            let heightAboveBottomPipe = nextPipepair.bottomPipe.topY - players[i].y;
             let distanceToCenter = nextPipepair.getCenterY() - players[i].y;
             let distanceToPipes = nextPipepair.bottomPipe.x - players[i].x + nextPipepair.bottomPipe.width;
 
             let inputs = [];
-            inputs[0] = players[i].y / canvas.height;
-            inputs[1] = distanceToCenter / canvas.height;
+            //inputs[0] = players[i].y / canvas.height;
+            inputs[1] = heightAboveBottomPipe / canvas.height;
             inputs[2] = distanceToPipes / canvas.width;
+            inputs[0] = players[i].velY / 10;
 
             // Debug lines, set population to 1 and disable repopulate to properly debug
             // if(!players[i].isDead) {
@@ -194,10 +196,10 @@ var network = n => {
             }
 
 
-            if (bestPlayer.brain.nodes[connection.start].type == 'bias') {
-                if (bestPlayer.brain.nodes[connection.end].type == 'output') {
+            if (bestPlayer.brain.nodes.find(n => n.id == connection.start).type == 'bias') {
+                if (bestPlayer.brain.nodes.find(n => n.id == connection.end).type == 'output') {
                     n.line(65, 20, 350, 40 + inputOffset * (connection.end - bestPlayer.brain.numInputNodes));
-                } else if (bestPlayer.brain.nodes[connection.end].type == 'hidden') {
+                } else if (bestPlayer.brain.nodes.find(n => n.id == connection.end).type == 'hidden') {
                     n.line(65, 20, 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
                 } else {
                     // console.log("bias to input connection");
@@ -205,20 +207,20 @@ var network = n => {
                 }
             }
 
-            if (bestPlayer.brain.nodes[connection.start].type == 'input') {
-                if (bestPlayer.brain.nodes[connection.end].type == 'output') {
+            if (bestPlayer.brain.nodes.find(n => n.id == connection.start).type == 'input') {
+                if (bestPlayer.brain.nodes.find(n => n.id == connection.end).type == 'output') {
                     n.line(65, 20 + inputOffset * connection.start, 350, 40 + inputOffset * (connection.end - bestPlayer.brain.numInputNodes));
-                } else if (bestPlayer.brain.nodes[connection.end].type == 'hidden') {
+                } else if (bestPlayer.brain.nodes.find(n => n.id == connection.end).type == 'hidden') {
                     n.line(65, 20 + inputOffset * connection.start, 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
                 } else {
                     // console.log("input to input or bias connection:");
                     // console.log(connection);
                 }
             }
-            if (bestPlayer.brain.nodes[connection.start].type == 'hidden') {
-                if (bestPlayer.brain.nodes[connection.end].type == 'output') {
+            if (bestPlayer.brain.nodes.find(n => n.id == connection.start).type == 'hidden') {
+                if (bestPlayer.brain.nodes.find(n => n.id == connection.end).type == 'output') {
                     n.line(140, inputOffset * (connection.start - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes), 350, 40 + inputOffset * (connection.end - bestPlayer.brain.numInputNodes));
-                } else if (bestPlayer.brain.nodes[connection.end].type == 'hidden') {
+                } else if (bestPlayer.brain.nodes.find(n => n.id == connection.end).type == 'hidden') {
                     n.line(140, inputOffset * (connection.start - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes), 140, inputOffset * (connection.end - bestPlayer.brain.numInputNodes - bestPlayer.brain.numOutputNodes));
                 } else {
                     // console.log("hidden to input or bias connection:");

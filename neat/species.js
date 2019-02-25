@@ -48,6 +48,10 @@ export default class Species {
     }
 
     getChampion() {
+        if(this.organisms[0] == undefined) {
+            console.log("fsd");
+        }
+
         if(this.champion && Math.abs(this.champion.fitness - this.organisms[0].fitness) < CONFIG.STAGNATION_THRESHOLD) {
             this.numStagnated++;
         }else{
@@ -89,16 +93,48 @@ export default class Species {
             return;
         }
 
+        // this.calculateFitnessSum();
+
+        // let survivors = [];
+        // let numUpperHalf = Math.floor(this.organisms.length / 2.0);
+
+        // while(survivors.length < numUpperHalf) {
+        //     let threshold = Math.random() * this.fitnessSum;
+        //     let sum = 0.0;
+        //     for(let i = 0; i < this.organisms.length; i++) {
+        //         sum += this.organisms[i].fitness;
+                
+        //         if(sum >= threshold) {
+        //             let survivor = this.organisms.splice(i, 1)[0];
+        //             survivors.push(survivor);
+        //             this.fitnessSum -= survivor.fitness;
+        //             break;
+        //         }
+        //     }
+        // }
+
+        // if(survivors[0] == survivors[1]) {
+        //     console.log("SAME");
+        // }
+
+        // this.organisms = survivors;
+
         // todo: just drop the lower half for now
         this.organisms = this.organisms.slice(0, Math.floor(this.organisms.length / 2.0));
     }
 
     reproduce() {
+        
         // copy champion unchanged
-        this.numCloning--;
         let championClone = this.champion.clone();
         championClone.generation += 1;
         this.offsprings.push(championClone);
+        if (this.numCloning > 0) {
+            this.numCloning--;
+        }else{
+            this.numCrossover--;
+        }
+
 
         // clone 25% asexual
         for(let i = 0, len = this.numCloning; i < len; i++) {
@@ -134,7 +170,9 @@ export default class Species {
             threshold = Math.random() * this.fitnessSum;
             sum = 0.0;
             let parent2;
+            let count = 0;
             do {
+                count++;
                 for(let j = 0, len2 = this.organisms.length; j < len2; j++) {
                     sum += this.organisms[j].fitness;
                     if(sum >= threshold) {
@@ -144,6 +182,9 @@ export default class Species {
                 }
                 threshold = Math.random() * this.fitnessSum;
                 sum = 0.0;
+                if(count > 200) {
+                    console.log("ds");
+                }
             }
             while(parent1 == parent2);
 
@@ -174,7 +215,7 @@ export default class Species {
         let disabledConenctions = offspring.brain.connections.filter(c => c.enabled == false);
         for(let i = 0, len = disabledConenctions.length; i < len; i++) {
             if(Math.random() < 0.25) {
-                offspring.brain.connections[i].enabled = false;
+                offspring.brain.connections[i].enabled = true;
             }
         }
         
@@ -190,51 +231,56 @@ export default class Species {
     }
 
     crossover(parent1, parent2) {
-        let brainOffspring = new Genome(parent1.numInputs, parent1.numOutputs);
+        let brainOffspring = new Genome(parent1.numInputs, parent1.numOutputs, parent1.activation);
 
         const nodesSet = [... new Set([...parent1.brain.nodes.map(n => n.id) ,...parent2.brain.nodes.map(n => n.id)])];
         for (let i = 0, len = nodesSet.length; i < len; i++) {
             if(parent1.brain.nodes.some(n => n.id == nodesSet[i]) && 
                 parent2.brain.nodes.some(n => n.id == nodesSet[i])){
                 if(Math.random() < 0.5) {
-                    brainOffspring.nodes.push(parent1.brain.nodes[nodesSet[i]].clone());
+                    brainOffspring.nodes.push(parent1.brain.nodes.find(n => n.id == [nodesSet[i]]).clone());
                 }else{
-                    brainOffspring.nodes.push(parent2.brain.nodes[nodesSet[i]].clone());
-                }
-            }else{
-                // maybe todo? when to copy which nodes
-                if(parent1.brain.nodes.some(n => n.id == nodesSet[i])) {
-                    brainOffspring.nodes.push(parent1.brain.nodes[nodesSet[i]].clone());
-                }else{
-                    brainOffspring.nodes.push(parent2.brain.nodes[nodesSet[i]].clone());
+                    brainOffspring.nodes.push(parent2.brain.nodes.find(n => n.id == [nodesSet[i]]).clone());
                 }
             }
         }
 
-        const innovationSet = [... new Set([...parent1.brain.connections.map(c => c.innovation) ,...parent2.brain.connections.map(c => c.innovation)])];
+        const innovationSet = [... new Set([...parent1.brain.connections.map(c => c.innovation), ...parent2.brain.connections.map(c => c.innovation)])];
         for (let i = 0, len = innovationSet.length; i < len; i++) {
             if(parent1.brain.connections.some(c => c.innovation == innovationSet[i]) && 
                 parent2.brain.connections.some(c => c.innovation == innovationSet[i])){
                 if(Math.random() < 0.5) {
-                    brainOffspring.connections.push(parent1.brain.connections[innovationSet[i]].clone());
+                    brainOffspring.connections.push(parent1.brain.connections.find(c => c.innovation == innovationSet[i]).clone());
                 }else{
-                    brainOffspring.connections.push(parent2.brain.connections[innovationSet[i]].clone());
+                    brainOffspring.connections.push(parent2.brain.connections.find(c => c.innovation == innovationSet[i]).clone());
                 }
             }else{
                 // disjoint and excess nodes
                 if(parent1.brain.connections.some(c => c.innovation == innovationSet[i])) {
                     if (parent1.fitness >= parent2.fitness) {
-                        brainOffspring.connections.push(parent1.brain.connections[innovationSet[i]].clone());
+                        brainOffspring.connections.push(parent1.brain.connections.find(c => c.innovation == innovationSet[i]).clone());
                     }
                 }else{
                     if (parent2.fitness >= parent1.fitness) {
-                        brainOffspring.connections.push(parent2.brain.connections[innovationSet[i]].clone());
+                        brainOffspring.connections.push(parent2.brain.connections.find(c => c.innovation == innovationSet[i]).clone());
                     }
                 }
             }
         }
 
-        let offspring = new Player(parent1.generation + 1, parent1.numInputs, parent1.numOutputs, brainOffspring, parent1.species);
+        // only clone nodes where we have references to
+        const neededNodesSet = [... new Set([...brainOffspring.connections.map(c => c.start), ...brainOffspring.connections.map(c => c.end)])];
+        for (let i = 0, len = neededNodesSet.length; i < len; i++) {
+            if (!brainOffspring.nodes.find(n => n.id == neededNodesSet[i])) {
+                if(parent1.brain.nodes.some(n => n.id == neededNodesSet[i])) {
+                    brainOffspring.nodes.push(parent1.brain.nodes.find(n => n.id == [neededNodesSet[i]]).clone());
+                }else{
+                    brainOffspring.nodes.push(parent2.brain.nodes.find(n => n.id == [neededNodesSet[i]]).clone());
+                }
+            }
+        }
+
+        let offspring = new Player(parent1.generation + 1, parent1.numInputs, parent1.numOutputs, parent1.activation, brainOffspring, parent1.species);
         return offspring;
     }
 }
