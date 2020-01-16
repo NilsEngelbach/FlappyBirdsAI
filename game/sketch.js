@@ -145,7 +145,7 @@ var network = n => {
     n.strokeWeight(1);
     n.stroke(127, 63, 120);
     const inputYOffset = 75;
-    const inputXOffset = 125;
+    const inputXOffset = 140;
     n.textSize(20);
 
     const bestPlayer = NEAT.getOverallChampion();
@@ -164,6 +164,10 @@ var network = n => {
     ];
 
     nodesMap.map((nodes, i) => {
+      let nodesInLayer = nodesMap[i].length;
+
+      let distance = height / nodesInLayer; 
+
       nodes.map((node, j) => {
         switch (node.type) {
           case 'bias':
@@ -187,9 +191,11 @@ var network = n => {
         }
         let y = 0;
         if (node.type === 'output') {
-          y = (nodesMap[0].length / 2) * inputYOffset;
+          y = height / 2;
+        } else if (node.type === 'hidden'){
+          y = j * distance + (i % 2 != 0 ? distance / 2 : 0);
         } else {
-          y = 20 + j * inputYOffset + (i % 2 != 0 ? inputYOffset / 2 : 0);
+          y = 50 + j * inputYOffset;
         }
         n.ellipse(x, y, 20, 20);
         node.x = x;
