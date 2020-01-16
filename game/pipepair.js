@@ -1,18 +1,19 @@
 import Pipe from "./pipe.js";
 
 export default class PipePair {
-  constructor(p, offsetX = 0) {
+  constructor(p, offsetX = 0, canvas) {
+    this.canvas = canvas;
     this.gap = 120;
     this.topHeight = 0;
     this.init(p, offsetX);
   }
 
   init(p, offsetX) {
-    this.topHeight = p.floor(p.random(55, canvas.height - 165 - this.gap)); // 110 ground height
-    this.bottomHeight = canvas.height - this.topHeight - this.gap;
+    this.topHeight = p.floor(p.random(55, this.canvas.height - 165 - this.gap)); // 110 ground height
+    this.bottomHeight = this.canvas.height - this.topHeight - this.gap;
 
-    this.bottomPipe = new Pipe(false, this.bottomHeight, offsetX);
-    this.topPipe = new Pipe(true, this.topHeight, offsetX);
+    this.bottomPipe = new Pipe(false, this.bottomHeight, offsetX, this.canvas);
+    this.topPipe = new Pipe(true, this.topHeight, offsetX, this.canvas);
   }
 
   show(p) {
@@ -23,8 +24,8 @@ export default class PipePair {
   update(p) {
     if (this.offScreen()) {
       this.init(p);
-      this.bottomPipe.x = canvas.width;
-      this.topPipe.x = canvas.width;
+      this.bottomPipe.x = this.canvas.width;
+      this.topPipe.x = this.canvas.width;
     }
     this.bottomPipe.update();
     this.topPipe.update();

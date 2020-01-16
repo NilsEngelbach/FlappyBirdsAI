@@ -1,16 +1,17 @@
 export default class Pipe {
-  constructor(isTop, height, offsetX) {
+  constructor(isTop, height, offsetX, canvas) {
+    this.canvas = canvas;
     this.width = 50;
     this.height = height;
-    this.x = canvas.width + offsetX + this.width;
+    this.x = this.canvas.width + offsetX + this.width;
 
     this.isTop = isTop;
     if (isTop) {
       this.topY = 0;
       this.bottomY = this.height;
     } else {
-      this.topY = canvas.height - this.height;
-      this.bottomY = canvas.height;
+      this.topY = this.canvas.height - this.height;
+      this.bottomY = this.canvas.height;
     }
   }
 
@@ -25,7 +26,7 @@ export default class Pipe {
   }
 
   update() {
-    this.x -= panSpeed;
+    this.x -= 4;
   }
 
   collided(p) {

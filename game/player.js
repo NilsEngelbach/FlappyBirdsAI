@@ -3,7 +3,7 @@ export default class Player {
     this.x = x;
     this.y = y;
     this.velY = -4;
-    this.velX = panSpeed;
+    this.velX = 4;
     this.size = 25;
     this.score = 0;
     this.isDead = false;
@@ -19,14 +19,11 @@ export default class Player {
       -this.size * 0.75,
       -this.size / 2
     );
-    // for debugging
-    // p.fill(255, 0, 0, 50);
-    // p.ellipse(0, 0, this.size, this.size);
     p.pop();
   }
 
-  update(p) {
-    this.velY += gravity;
+  update(p, pipePairA, pipePairB, ground) {
+    this.velY += 0.75;
     this.velY = p.constrain(this.velY, -10, 10);
     this.y += this.velY;
     if (

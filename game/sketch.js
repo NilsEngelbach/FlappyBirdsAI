@@ -1,23 +1,22 @@
 import Ground from "./ground.js";
-import NEAT from "../neat/neat.js";
 import PipePair from "./pipepair.js";
 import Player from "./player.js";
-import Types from "../neat/types.js";
-import * as Activation from "../neat/activations.js";
 
-window.panSpeed = 4;
-window.gravity = 0.75;
+const POPULATION_SIZE = 200;
+const NUM_INPUTS = 3;
+const NUM_OUTPUTS = 1;
 
-window.players = [];
-window.playerCount = 200;
-window.bestPlayer = {};
-
-window.pipePairA;
-window.pipePairB;
-
-window.neat = new NEAT(playerCount, 3, 1, Activation.sigmoid);
+neaterJS.CONFIG.ALLOW_LOOPS = true;
+var NEAT = neaterJS.init(POPULATION_SIZE, NUM_INPUTS, NUM_OUTPUTS, neaterJS.Activations.sigmoid);
 
 var game = p => {
+
+  var players;
+  var canvas;
+  var pipePairA;
+  var pipePairB;
+  var ground;
+
   p.preload = () => {
     p.defaultBirdSprite = p.loadImage("sprites/bird.png");
     p.bgSprite = p.loadImage("sprites/bg.png");
@@ -33,27 +32,27 @@ var game = p => {
 
   p.setup = () => {
     p.frameRate(1000);
-    window.canvas = p.createCanvas(340, 570);
+    canvas = p.createCanvas(340, 570);
     players = [];
-    for (let i = 0; i < playerCount; i++) {
+    for (let i = 0; i < POPULATION_SIZE; i++) {
       players.push(
-        new Player(window.canvas.width / 3, window.canvas.height / 2)
+        new Player(canvas.width / 3, canvas.height / 2)
       );
     }
-    window.pipePairA = new PipePair(p);
-    window.pipePairB = new PipePair(p, window.canvas.width / 2 + 35);
-    window.ground = new Ground();
+    pipePairA = new PipePair(p, 0, canvas);
+    pipePairB = new PipePair(p, canvas.width / 2 + 35, canvas);
+    ground = new Ground(canvas);
   };
 
   var count = 0;
   var highscore = 0;
-  var birdsAlive = playerCount;
+  var birdsAlive = POPULATION_SIZE;
 
   p.draw = () => {
     count++;
 
     p.image(p.bgSprite, 0, -100);
-    p.bgSprite.resize(window.canvas.width, 0);
+    p.bgSprite.resize(canvas.width, 0);
 
     pipePairA.update(p);
     pipePairA.show(p);
@@ -64,7 +63,7 @@ var game = p => {
 
     p.textSize(20);
     p.text(
-      `Generation ${neat.generation} (${Object.keys(neat.speciesDict).length})`,
+      `Generation ${NEAT.generation} (${Object.keys(NEAT.speciesDict).length})`,
       10,
       canvas.height - 20
     );
@@ -72,7 +71,7 @@ var game = p => {
     p.text("Highscore " + highscore, 180, canvas.height - 50);
     p.text("Alive " + birdsAlive, 180, canvas.height - 20);
 
-    for (let i = 0; i < playerCount; i++) {
+    for (let i = 0; i < POPULATION_SIZE; i++) {
       let nextPipepair = getNextPipepair(players[i].x);
       let heightAboveBottomPipe = nextPipepair.bottomPipe.topY - players[i].y;
       let distanceToCenter = nextPipepair.getCenterY() - players[i].y;
@@ -82,27 +81,20 @@ var game = p => {
         nextPipepair.bottomPipe.width;
 
       let inputs = [];
-      //inputs[0] = players[i].y / canvas.height;
       inputs[1] = heightAboveBottomPipe / canvas.height;
       inputs[2] = distanceToPipes / canvas.width;
       inputs[0] = players[i].velY / 10;
 
-      // Debug lines, set population to 1 and disable repopulate to properly debug
-      // if(!players[i].isDead) {
-      //     p.line(players[i].x, players[i].y, players[i].x, players[i].y + distanceToCenter);
-      //     p.line(players[i].x, players[i].y, players[i].x + distanceToPipes, players[i].y);
-      // }
+      NEAT.population[i].see(inputs);
 
-      neat.population[i].see(inputs);
-
-      if (neat.population[i].think()[0] > 0.5) {
+      if (NEAT.population[i].think()[0] > 0.5) {
         players[i].flap();
       }
 
       if (!players[i].isDead) {
-        players[i].update(p);
-        players[i].show(p, p.speciesSprite[neat.population[i].species]);
-        neat.population[i].setFitness(players[i].score);
+        players[i].update(p, pipePairA, pipePairB, ground);
+        players[i].show(p, p.speciesSprite[NEAT.population[i].species]);
+        NEAT.population[i].setFitness(players[i].score);
       }
     }
 
@@ -117,8 +109,8 @@ var game = p => {
         highscore = highestScore;
       }
       count = 0;
-      birdsAlive = playerCount;
-      neat.repopulate();
+      birdsAlive = POPULATION_SIZE;
+      NEAT.repopulate();
       p.setup();
     }
   };
@@ -138,3 +130,92 @@ var game = p => {
 };
 
 var gameSketch = new p5(game, "game");
+
+var network = n => {
+  const width = 340;
+  const height = 340;
+
+  n.setup = () => {
+    n.frameRate(30);
+    n.createCanvas(width, height);
+  };
+
+  n.draw = () => {
+    n.background(240, 240, 240);
+    n.strokeWeight(1);
+    n.stroke(127, 63, 120);
+    const inputYOffset = 75;
+    const inputXOffset = 125;
+    n.textSize(20);
+
+    const bestPlayer = NEAT.getOverallChampion();
+
+    const nodesMap = [
+      [
+        ...bestPlayer.brain.getInputNodes(),
+        bestPlayer.brain.getBiasNode()
+      ],
+      [
+        ...bestPlayer.brain.getHiddenNodes()
+      ],
+      [
+        ...bestPlayer.brain.getOutputNodes()
+      ]
+    ];
+
+    nodesMap.map((nodes, i) => {
+      nodes.map((node, j) => {
+        switch (node.type) {
+          case 'bias':
+            n.fill(204, 101, 192, 127);
+            break;
+          case 'input':
+            n.fill(100, 1, 192, 127);
+            break;
+          case 'output':
+            n.fill(10, 100, 12, 127);
+            break;
+          default:
+            n.fill(50, 150, 55, 127);
+        }
+
+        let x = 0;
+        if (node.type === 'hidden') {
+          x = 20 + i * inputXOffset + (j % 2 != 0 ? -10 : 10);
+        } else {
+          x = 20 + i * inputXOffset;
+        }
+        let y = 0;
+        if (node.type === 'output') {
+          y = (nodesMap[0].length / 2) * inputYOffset;
+        } else {
+          y = 20 + j * inputYOffset + (i % 2 != 0 ? inputYOffset / 2 : 0);
+        }
+        n.ellipse(x, y, 20, 20);
+        node.x = x;
+        node.y = y;
+      });
+    });
+
+    const flattMappedNodes = nodesMap.flatMap(x => x);
+
+    bestPlayer.brain.connections.map((connection, i) => {
+      n.strokeWeight(1);
+      n.stroke(127, 63, 120);
+
+      if (!connection.enabled) {
+        n.stroke(255, 255, 255);
+      } else {
+        n.strokeWeight(n.abs(connection.weight) * 4);
+        connection.weight < 0 ? n.stroke(0, 0, 255) : n.stroke(255, 0, 0);
+      }
+
+      const start = flattMappedNodes.find(x => x.id === connection.start);
+      const end = flattMappedNodes.find(x => x.id === connection.end);
+
+      n.line(start.x, start.y, end.x, end.y);
+    });
+  };
+};
+
+new p5(network, "network");
