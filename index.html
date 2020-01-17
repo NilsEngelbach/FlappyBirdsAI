@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.css">
     <script src="lib/neaterJS.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
@@ -10,16 +11,59 @@
       body {
         margin: 0;
         padding: 0;
+        display: flex;
+        justify-content: center;
+        flex-direction: row;
+        background-color: lightyellow;
       }
+      div,
       canvas {
         display: block;
+        margin: auto;
+        margin-top: 1rem;
+      }
+      #game {
+        cursor: pointer;
+        margin-right: 1rem;
+      }
+      .github {
+        z-index: 1;
+        position: fixed;
+        bottom: 0.5rem;
+        right: 0.5rem;
+        font-size: 2rem;
+        color: rgba(0,0,0, 0.5);
+        cursor: pointer;
+      }
+      .github:hover {
+        color: rgba(0, 0, 0, 0.95);
+      }
+      #species {
+        display: flex;
+        flex-direction: column;
+      }
+      button {
+        min-height: 20px;
+        padding-left: 25px;
+        margin: 3px;
+        background-position: left center;
+        background-size: contain;
+        background-repeat: no-repeat;
+        border: none;
+        background-color: linen;
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
     <div id="game"></div>
-    <br />
-    <div id="network"></div>
+    <div>
+      <div id="network"></div>
+      <div id="species"></div>
+    </div>
+    <a class="github" href="https://github.com/NilsEngelbach/FlappyBirdsAI">
+      <i class="fab fa-github"></i>
+    </a>
     <script type="module" src="./game/sketch.js"></script>
   </body>
 </html>
